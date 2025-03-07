@@ -25,5 +25,8 @@ func main() {
 
 	server := &http.Server{Addr: ":8080", Handler: router}
 	fmt.Println("Server is listening on port 8080")
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
