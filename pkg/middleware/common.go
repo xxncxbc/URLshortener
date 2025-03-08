@@ -7,7 +7,7 @@ type WrapperWriter struct {
 	StatusCode int
 }
 
-func (w WrapperWriter) WriteHeader(status int) {
+func (w *WrapperWriter) WriteHeader(status int) {
 	w.StatusCode = status
 	w.ResponseWriter.WriteHeader(status)
 }
