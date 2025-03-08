@@ -16,6 +16,7 @@ func main() {
 	router := http.NewServeMux()
 	//Repositories
 	linkRepository := link.NewLinkRepository(database)
+
 	//Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config: conf,
@@ -24,8 +25,13 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
+	//middlewares снизу вверх
+	stack := middleware.Chain(
+		middleware.CORS,
+		middleware.Logging,
+	)
 	server := &http.Server{Addr: ":8080",
-		Handler: middleware.Logging(middleware.CORS(router)),
+		Handler: stack(router),
 	}
 	fmt.Println("Server is listening on port 8080")
 	err := server.ListenAndServe()
