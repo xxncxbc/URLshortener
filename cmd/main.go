@@ -5,6 +5,7 @@ import (
 	"URLshortener/internal/auth"
 	"URLshortener/internal/link"
 	"URLshortener/pkg/db"
+	"URLshortener/pkg/middleware"
 	"fmt"
 	"net/http"
 )
@@ -23,7 +24,7 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
-	server := &http.Server{Addr: ":8080", Handler: router}
+	server := &http.Server{Addr: ":8080", Handler: middleware.Logging(router)}
 	fmt.Println("Server is listening on port 8080")
 	err := server.ListenAndServe()
 	if err != nil {
