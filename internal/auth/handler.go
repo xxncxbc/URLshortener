@@ -11,15 +11,18 @@ import (
 
 // зависимости конфига
 type AuthHandlerDeps struct {
+	*AuthService
 	*configs.Config
 }
 type AuthHandler struct {
+	*AuthService
 	*configs.Config
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		Config: deps.Config,
+		AuthService: deps.AuthService,
+		Config:      deps.Config,
 	}
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
@@ -34,7 +37,8 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			log.Println(err.Error())
 			return
 		}
-		fmt.Println(*payload)
+		email, err := handler.AuthService.Login(payload.Email, payload.Password)
+		fmt.Println(email)
 		data := LoginResponse{
 			Token: "lol",
 		}
@@ -45,13 +49,12 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Register")
-		var payload *RegisterRequest
-		payload, err := req.HandleBody[RegisterRequest](&w, r)
+		body, err := req.HandleBody[RegisterRequest](&w, r)
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
-		fmt.Println(*payload)
-		res.Json(w, *payload, http.StatusOK)
+		handler.AuthService.Register(body.Email, body.Password, body.Name)
+		res.Json(w, *body, http.StatusOK)
 	}
 }
