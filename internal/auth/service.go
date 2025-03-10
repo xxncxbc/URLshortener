@@ -16,9 +16,10 @@ func NewAuthService(userRepository *user.UserRepository) *AuthService {
 
 func (service *AuthService) Login(email, password string) (string, error) {
 	existedUser, err := service.UserRepository.GetByEmail(email)
-	if err != nil {
+	if existedUser == nil || err != nil {
 		return "", errors.New(ErrWrongCredentials)
 	}
+	//проверка введенного пароля и хэшированного в бд
 	err = bcrypt.CompareHashAndPassword([]byte(existedUser.Password), []byte(password))
 	if err != nil {
 		return "", errors.New(ErrWrongCredentials)
@@ -31,6 +32,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 	if existedUser != nil {
 		return "", errors.New(ErrUserExists)
 	}
+	//хэшируем пароль
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

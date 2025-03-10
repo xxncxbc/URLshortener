@@ -2,10 +2,9 @@ package auth
 
 import (
 	"URLshortener/configs"
+	"URLshortener/pkg/jwthelper"
 	"URLshortener/pkg/req"
 	"URLshortener/pkg/res"
-	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -30,17 +29,22 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Login")
-		var payload *LoginRequest
-		payload, err := req.HandleBody[LoginRequest](&w, r)
+		body, err := req.HandleBody[LoginRequest](&w, r)
 		if err != nil {
-			log.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		email, err := handler.AuthService.Login(payload.Email, payload.Password)
-		fmt.Println(email)
+		email, err := handler.AuthService.Login(body.Email, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		data := LoginResponse{
-			Token: "lol",
+			Token: token,
 		}
 		res.Json(w, data, http.StatusOK)
 	}
@@ -48,13 +52,24 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 
 func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Register")
 		body, err := req.HandleBody[RegisterRequest](&w, r)
 		if err != nil {
-			log.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		handler.AuthService.Register(body.Email, body.Password, body.Name)
-		res.Json(w, *body, http.StatusOK)
+		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data := RegisterResponse{
+			Token: token,
+		}
+		res.Json(w, data, http.StatusOK)
 	}
 }
