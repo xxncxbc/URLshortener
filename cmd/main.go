@@ -28,6 +28,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		Config:         conf,
 	})
 
 	//middlewares снизу вверх
@@ -35,11 +36,13 @@ func main() {
 		middleware.CORS,
 		middleware.Logging,
 	)
+	//сервер
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: stack(router),
 	}
 	fmt.Println("Server is listening on port 8080")
+	// запуск сервера
 	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)

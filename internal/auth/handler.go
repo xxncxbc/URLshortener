@@ -39,7 +39,9 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(email)
+		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(jwthelper.JWTData{
+			Email: email,
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -62,7 +64,9 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(email)
+		token, err := jwthelper.NewJWT(handler.Config.Auth.Secret).Create(jwthelper.JWTData{
+			Email: email,
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
