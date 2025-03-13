@@ -28,7 +28,7 @@ func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 			return
 		}
 		token := strings.TrimPrefix(AuthHeader, "Bearer ")
-		isValid, data := jwthelper.NewJWT(config.Auth.Secret).Parse(token)
+		isValid, data := jwthelper.NewJWT(config.Auth.AccessSecret).Parse(token)
 		if !isValid {
 			writeAuthed(w)
 			return
