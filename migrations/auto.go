@@ -2,6 +2,7 @@ package main
 
 import (
 	"URLshortener/internal/link"
+	"URLshortener/internal/stat"
 	"URLshortener/internal/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -18,7 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = db.AutoMigrate(&link.Link{}, &user.User{})
+	err = db.AutoMigrate(&link.Link{}, &user.User{}, &stat.Stat{})
 	if err != nil {
 		panic(err)
 	}

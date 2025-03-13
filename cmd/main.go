@@ -4,8 +4,10 @@ import (
 	"URLshortener/configs"
 	"URLshortener/internal/auth"
 	"URLshortener/internal/link"
+	"URLshortener/internal/stat"
 	"URLshortener/internal/user"
 	"URLshortener/pkg/db"
+	"URLshortener/pkg/event"
 	"URLshortener/pkg/middleware"
 	"fmt"
 	"net/http"
@@ -15,12 +17,18 @@ func main() {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
 	router := http.NewServeMux()
+	eventBus := event.NewEventBus()
 
 	//Repositories
 	linkRepository := link.NewLinkRepository(database)
 	userRepository := user.NewUserRepository(database)
+	statRepository := stat.NewStatRepository(database)
 	//services
 	authService := auth.NewAuthService(userRepository)
+	statService := stat.NewStatService(&stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepository,
+	})
 	//Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config:      conf,
@@ -28,6 +36,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		EventBus:       eventBus,
 		Config:         conf,
 	})
 
@@ -47,4 +56,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	go statService.AddClick()
+
 }
