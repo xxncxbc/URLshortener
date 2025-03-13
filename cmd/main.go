@@ -52,10 +52,9 @@ func main() {
 	}
 	fmt.Println("Server is listening on port 8080")
 	// запуск сервера
+	go statService.AddClick()
 	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
-	go statService.AddClick()
-
 }

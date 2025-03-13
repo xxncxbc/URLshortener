@@ -8,7 +8,6 @@ import (
 	"URLshortener/pkg/res"
 	"fmt"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -115,7 +114,6 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			return
 		}
 		//пишем в шину событий
-		log.Println("Writing to event bus")
 		go handler.EventBus.Publish(event.Event{
 			Type: event.EventLinkVisited,
 			Data: link.ID,

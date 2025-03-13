@@ -25,7 +25,6 @@ func NewStatService(deps *StatServiceDeps) *StatService {
 func (s *StatService) AddClick() {
 	for msg := range s.EventBus.Subscribe() {
 		if msg.Type == event.EventLinkVisited {
-			log.Println("Click link visited")
 			id, ok := msg.Data.(uint)
 			if !ok {
 				log.Fatalln("Bad EventLinkVisited Data: ", msg.Data)
