@@ -41,20 +41,22 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		email, err := handler.AuthService.Login(body.Email, body.Password)
+		email, userId, err := handler.AuthService.Login(body.Email, body.Password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		accessToken, err := jwthelper.NewJWT(handler.Config.Auth.AccessSecret).Create(jwthelper.JWTData{
-			Email: email,
+			Email:  email,
+			UserId: userId,
 		},
 			time.Now().Add(AccessTokenLifeSpan))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		refreshToken, err := jwthelper.NewJWT(handler.Config.Auth.RefreshSecret).Create(jwthelper.JWTData{
-			Email: email,
+			Email:  email,
+			UserId: userId,
 		}, time.Now().Add(RefreshTokenLifeSpan))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -74,24 +76,31 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		email, userId, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		accessToken, err := jwthelper.NewJWT(handler.Config.Auth.AccessSecret).Create(jwthelper.JWTData{
-			Email: email,
+			Email:  email,
+			UserId: userId,
 		},
 			time.Now().Add(AccessTokenLifeSpan))
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		refreshToken, err := jwthelper.NewJWT(handler.Config.Auth.RefreshSecret).Create(jwthelper.JWTData{
-			Email: email,
-		}, time.Now().Add(RefreshTokenLifeSpan))
+			Email:  email,
+			UserId: userId,
+		},
+			time.Now().Add(RefreshTokenLifeSpan))
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		data := RegisterResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
@@ -113,15 +122,18 @@ func (handler *AuthHandler) Refresh() http.HandlerFunc {
 			return
 		}
 		accessToken, err := jwthelper.NewJWT(handler.Config.Auth.AccessSecret).Create(jwthelper.JWTData{
-			Email: parsedToken.Email,
+			Email:  parsedToken.Email,
+			UserId: parsedToken.UserId,
 		},
 			time.Now().Add(AccessTokenLifeSpan))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		refreshToken, err := jwthelper.NewJWT(handler.Config.Auth.AccessSecret).Create(jwthelper.JWTData{
-			Email: parsedToken.Email,
-		}, time.Now().Add(RefreshTokenLifeSpan))
+			Email:  parsedToken.Email,
+			UserId: parsedToken.UserId,
+		},
+			time.Now().Add(RefreshTokenLifeSpan))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

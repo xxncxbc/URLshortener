@@ -8,14 +8,16 @@ import (
 
 type Link struct {
 	gorm.Model
-	Url   string      `json:"url"`
-	Hash  string      `json:"hash" gorm:"uniqueIndex"`
-	Stats []stat.Stat `json:"stats" gorm:"constraints:OnUpdate:CASCADE,OnDelete:Set NULL;"`
+	Url    string      `json:"url"`
+	Hash   string      `json:"hash" gorm:"uniqueIndex"`
+	Stats  []stat.Stat `json:"stats" gorm:"constraints:OnUpdate:CASCADE,OnDelete:Set NULL;"`
+	UserId uint        `json:"user_id" gorm:"uniqueIndex"`
 }
 
-func NewLink(url string) *Link {
+func NewLink(url string, userId uint) *Link {
 	link := &Link{
-		Url: url,
+		Url:    url,
+		UserId: userId,
 	}
 	link.GenerateHash()
 	return link
