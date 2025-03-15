@@ -37,6 +37,13 @@ func initData(db *gorm.DB) {
 	})
 }
 
+func removeData(db *gorm.DB) {
+	db.
+		Unscoped().
+		Where("email = ?", "login@example.com").
+		Delete(&user.User{})
+}
+
 func TestLoginSuccess(t *testing.T) {
 	db := initDb()
 	initData(db)
@@ -68,6 +75,7 @@ func TestLoginSuccess(t *testing.T) {
 	if loginResponse.RefreshToken == "" {
 		t.Fatalf("Expected refresh token, got empty")
 	}
+	removeData(db)
 }
 
 func TestLoginFail(t *testing.T) {
@@ -87,4 +95,5 @@ func TestLoginFail(t *testing.T) {
 	if res.StatusCode != 401 {
 		t.Fatalf("Expected status code %d, got %d", 401, res.StatusCode)
 	}
+	removeData(db)
 }
