@@ -18,12 +18,15 @@ func TestJWT_CreateAndParse(t *testing.T) {
 		time.Now().Add(time.Hour))
 	if err != nil {
 		t.Fatal(err.Error())
+		return
 	}
 	isValid, data := jwtService.Parse(token)
 	if !isValid {
 		t.Fatal(err.Error())
+		return
 	}
 	if data.Email != email || data.UserId != userId {
 		t.Fatal(data.Email, data.UserId)
+		return
 	}
 }

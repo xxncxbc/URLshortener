@@ -20,8 +20,8 @@ type AuthHandlerDeps struct {
 	*configs.Config
 }
 type AuthHandler struct {
-	*AuthService
-	*configs.Config
+	AuthService *AuthService
+	Config      *configs.Config
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
