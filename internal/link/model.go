@@ -11,7 +11,7 @@ type Link struct {
 	Url    string      `json:"url"`
 	Hash   string      `json:"hash" gorm:"uniqueIndex"`
 	Stats  []stat.Stat `json:"-" gorm:"constraints:OnUpdate:CASCADE,OnDelete:Set NULL;"`
-	UserId uint        `json:"user_id" gorm:"uniqueIndex"`
+	UserId uint        `json:"user_id" gorm:"foreignKey:UserId;references:ID"`
 }
 
 func NewLink(url string, userId uint) *Link {
