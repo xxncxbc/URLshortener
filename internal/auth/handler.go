@@ -105,7 +105,7 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}
-		res.Json(w, data, http.StatusOK)
+		res.Json(w, data, http.StatusCreated)
 	}
 }
 

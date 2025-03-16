@@ -15,6 +15,11 @@ import (
 	"testing"
 )
 
+const (
+	InitialEmail    = "a@a.com"
+	initialPassword = "password"
+)
+
 func prepare() (*AuthHandler, sqlmock.Sqlmock, error) {
 	database, mock, err := sqlmock.New()
 	if err != nil {
@@ -41,11 +46,7 @@ func prepare() (*AuthHandler, sqlmock.Sqlmock, error) {
 	return &handler, mock, nil
 }
 
-func TestLoginSuccess(t *testing.T) {
-	const (
-		InitialEmail    = "a@a.com"
-		initialPassword = "password"
-	)
+func TestLoginHandlerSuccess(t *testing.T) {
 	handler, mock, mockErr := prepare()
 	if mockErr != nil {
 		t.Fatal(mockErr)
@@ -53,11 +54,11 @@ func TestLoginSuccess(t *testing.T) {
 	}
 	pass, _ := bcrypt.GenerateFromPassword([]byte(initialPassword), bcrypt.MinCost)
 	rows := sqlmock.NewRows([]string{"email", "password"}).
-		AddRow("a2a.com", string(pass))
+		AddRow(initialPassword, string(pass))
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	data, _ := json.Marshal(&LoginRequest{
-		Email:    "a@a.com",
-		Password: "password",
+		Email:    InitialEmail,
+		Password: initialPassword,
 	})
 	reader := bytes.NewReader(data)
 	wr := httptest.NewRecorder()
@@ -65,5 +66,29 @@ func TestLoginSuccess(t *testing.T) {
 	handler.Login()(wr, req)
 	if wr.Result().StatusCode != http.StatusOK {
 		t.Errorf("login: expected status 200, got %d", wr.Result().StatusCode)
+	}
+}
+
+func TestRegisterHandlerSuccess(t *testing.T) {
+	handler, mock, err := prepare()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	mock.ExpectQuery("SELECT").WillReturnError(nil)
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT").WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
+	mock.ExpectCommit()
+	data, _ := json.Marshal(&RegisterRequest{
+		Email:    InitialEmail,
+		Password: initialPassword,
+		Name:     "Name",
+	})
+	reader := bytes.NewReader(data)
+	wr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", reader)
+	handler.Register()(wr, req)
+	if wr.Result().StatusCode != http.StatusCreated {
+		t.Errorf("register: expected status 201, got %d", wr.Result().StatusCode)
 	}
 }
