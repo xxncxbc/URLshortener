@@ -35,9 +35,9 @@ func (repo *StatRepository) GetStat(by string, from, to time.Time) []GetStatResp
 	var selectQuery string
 	switch by {
 	case GroupByMonth:
-		selectQuery = "to_char(date, 'YYYY-MM' as period, sum(clicks))"
+		selectQuery = "to_char(date, 'YYYY-MM') AS period, sum(clicks)"
 	case GroupByDay:
-		selectQuery = "to_char(date, 'YYYY-MM-DD' as period, sum(clicks))"
+		selectQuery = "to_char(date, 'YYYY-MM-DD') AS period, sum(clicks)"
 	}
 	repo.DB.Table("stats").
 		Select(selectQuery).
