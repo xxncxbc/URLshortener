@@ -11,7 +11,8 @@ import (
 type key string
 
 const (
-	ContextEmailKey key = "ContextEmailKey"
+	ContextEmailKey  key = "ContextEmailKey"
+	ContextUserIdKey key = "ContextUserIdKey"
 )
 
 func writeAuthed(w http.ResponseWriter) {
@@ -23,12 +24,8 @@ func writeAuthed(w http.ResponseWriter) {
 func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		AuthHeader := r.Header.Get("Authorization")
-		if strings.HasPrefix(AuthHeader, "Bearer ") {
-			writeAuthed(w)
-			return
-		}
 		token := strings.TrimPrefix(AuthHeader, "Bearer ")
-		isValid, data := jwthelper.NewJWT(config.Auth.Secret).Parse(token)
+		isValid, data := jwthelper.NewJWT(config.Auth.AccessSecret).Parse(token)
 		if !isValid {
 			writeAuthed(w)
 			return
@@ -37,6 +34,7 @@ func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 		//значение авторизации в него, чтобы обработчики ниже уже знали о статусе
 		//авторизации пользователя
 		ctx := context.WithValue(r.Context(), ContextEmailKey, data.Email)
+		ctx = context.WithValue(ctx, ContextUserIdKey, data.UserId)
 		req := r.WithContext(ctx)
 		//передаем новый запрос в обработку
 		next.ServeHTTP(w, req)

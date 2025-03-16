@@ -6,7 +6,6 @@ import (
 	"URLshortener/pkg/middleware"
 	"URLshortener/pkg/req"
 	"URLshortener/pkg/res"
-	"fmt"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -42,7 +41,8 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		link := NewLink(body.Url)
+		userId := r.Context().Value(middleware.ContextUserIdKey).(uint)
+		link := NewLink(body.Url, userId)
 		for existedLink, _ := handler.LinkRepository.GetByHash(link.Hash); existedLink != nil; link.GenerateHash() {
 		}
 		createdLink, err := handler.LinkRepository.Create(link)
@@ -58,13 +58,19 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idString := r.PathValue("id")
 		id, err := strconv.ParseUint(idString, 10, 32)
+		userId := r.Context().Value(middleware.ContextUserIdKey).(uint)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		_, err = handler.LinkRepository.GetById(uint(id))
+		link, err := handler.LinkRepository.GetById(uint(id))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		//если пользователь пытается удалить чужую ссылку
+		if link.UserId != userId {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
 		err = handler.LinkRepository.Delete(uint(id))
@@ -78,9 +84,9 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 
 func (handler *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		email, ok := r.Context().Value(middleware.ContextEmailKey).(string)
-		if ok {
-			fmt.Println(email)
+		userId, ok := r.Context().Value(middleware.ContextUserIdKey).(uint)
+		if !ok {
+			http.Error(w, "Error getting user id", http.StatusInternalServerError)
 		}
 		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
@@ -92,16 +98,26 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		link, err := handler.LinkRepository.Update(&Link{
-			Model: gorm.Model{ID: uint(id)},
-			Url:   body.Url,
-			Hash:  body.Hash,
+		link, err := handler.LinkRepository.GetById(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if link.UserId != userId {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+		updatedLink, err := handler.LinkRepository.Update(&Link{
+			Model:  gorm.Model{ID: uint(id)},
+			Url:    body.Url,
+			Hash:   body.Hash,
+			UserId: userId,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		res.Json(w, link, http.StatusOK)
+		res.Json(w, updatedLink, http.StatusOK)
 	}
 }
 

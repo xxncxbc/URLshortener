@@ -10,10 +10,21 @@ type RegisterRequest struct {
 	Password string `json:"password" validate:"required"`
 	Name     string `json:"name" validate:"required"`
 }
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
 type LoginResponse struct {
-	Token string `json:"token"`
+	AccessToken  string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type RegisterResponse struct {
-	Token string `json:"token"`
+	AccessToken  string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshResponse struct {
+	AccessToken  string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }

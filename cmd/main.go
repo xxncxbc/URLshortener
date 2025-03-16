@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
 	router := http.NewServeMux()
@@ -48,14 +48,19 @@ func main() {
 		middleware.CORS,
 		middleware.Logging,
 	)
+	go statService.AddClick()
+	return stack(router)
+}
+
+func main() {
+	app := App()
 	//сервер
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: stack(router),
+		Handler: app,
 	}
 	fmt.Println("Server is listening on port 8080")
 	// запуск сервера
-	go statService.AddClick()
 	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)
